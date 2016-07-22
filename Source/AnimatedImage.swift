@@ -8,11 +8,11 @@ import Nuke
 import ImageIO
 
 public class AnimatedImage: UIImage {
-    public let data: NSData! // it's nonnull
+    public let data: Data! // it's nonnull
     
-    public init(data: NSData, poster: CGImageRef) {
+    public init(data: Data, poster: CGImage) {
         self.data = data
-        super.init(CGImage: poster, scale: 1, orientation: .Up)
+        super.init(cgImage: poster, scale: 1, orientation: .up)
     }
     
     public required init?(coder decoder: NSCoder) {
@@ -20,37 +20,37 @@ public class AnimatedImage: UIImage {
         super.init(coder: decoder)
     }
     
-    public required convenience init(imageLiteral name: String) {
+    public required convenience init(imageLiteralResourceName name: String) {
         fatalError("init(imageLiteral:) has not been implemented")
     }
 }
 
 /** Creates instances of `AnimatedImage` class from the given data. Checks if the image data is in a GIF image format, otherwise returns nil.
  */
-public class AnimatedImageDecoder: ImageDecoding {
+public class AnimatedImageDecoder: Nuke.DataDecoding {
     public init() {}
-    
-    public func decode(data: NSData, response: NSURLResponse?) -> Image? {
+
+    public func decode(data: Data, response: URLResponse) -> Image? {
         guard self.isAnimatedGIFData(data) else {
             return nil
         }
-        guard let poster = self.posterImageFor(data) else {
+        guard let poster = self.posterImage(for: data) else {
             return nil
         }
         return AnimatedImage(data: data, poster: poster)
     }
     
-    public func isAnimatedGIFData(data: NSData) -> Bool {
+    public func isAnimatedGIFData(_ data: Data) -> Bool {
         let sigLength = 3
-        if data.length < sigLength {
+        if data.count < sigLength {
             return false
         }
-        var sig = [UInt8](count: sigLength, repeatedValue: 0)
-        data.getBytes(&sig, length:sigLength)
+        var sig = [UInt8](repeating: 0, count: sigLength)
+        (data as NSData).getBytes(&sig, length:sigLength)
         return sig[0] == 0x47 && sig[1] == 0x49 && sig[2] == 0x46
     }
     
-    private func posterImageFor(data: NSData) -> CGImageRef? {
+    private func posterImage(for data: Data) -> CGImage? {
         if let source = CGImageSourceCreateWithData(data, nil) {
             return CGImageSourceCreateImageAtIndex(source, 0, nil)
         }
@@ -63,7 +63,7 @@ public class AnimatedImageDecoder: ImageDecoding {
  */
 public extension FLAnimatedImageView {
     /// Displays a given image. Starts animation if image is an instance of AnimatedImage.
-    public override func nk_displayImage(image: Image?) {
+    public override func nk_display(_ image: Image?) {
         guard image != nil else {
             self.animatedImage = nil
             self.image = nil
@@ -74,9 +74,9 @@ public extension FLAnimatedImageView {
             self.image = image
 
             // Start playback after we prefare FLAnimatedImage for rendering
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
+            DispatchQueue.global(attributes: DispatchQueue.GlobalAttributes.qosDefault).async {
                 let animatedImage = FLAnimatedImage(animatedGIFData: image.data)
-                dispatch_async(dispatch_get_main_queue()) {
+                DispatchQueue.main.async {
                     if self.image === image { // Still displaying the same poster image
                         self.animatedImage = animatedImage
                     }
@@ -88,33 +88,25 @@ public extension FLAnimatedImageView {
     }
 }
 
-/** Prevents `ImageLoader` from processing animated images.
- */
-public class AnimatedImageLoaderDelegate: ImageLoaderDefaultDelegate {
-    public override func loader(loader: ImageLoader, processorFor request: ImageRequest, image: Image) -> ImageProcessing? {
-        return image is AnimatedImage ? nil : super.loader(loader, processorFor: request, image: image)
-    }
-}
-
 /** Memory cache that is aware of animated images. Can be used for both single-frame and animated images.
  */
-public class AnimatedImageMemoryCache: ImageMemoryCache {
+public class AnimatedImageMemoryCache: Nuke.ImageCache {
 
     /** Can be used to disable storing animated images. Default value is true (storage is allowed).
      */
     public var allowsAnimatedImagesStorage = true
 
-    public override func setResponse(response: ImageCachedResponse, forKey key: ImageRequestKey) {
-        if !self.allowsAnimatedImagesStorage && response.image is AnimatedImage {
+    public override func setImage(_ image: Image, for key: ImageRequestKey) {
+        if !self.allowsAnimatedImagesStorage && image is AnimatedImage {
             return
         }
-        super.setResponse(response, forKey: key)
+        super.setImage(image, for: key)
     }
 
-    public override func costFor(image: Image) -> Int {
+    public override func cost(for image: Image) -> Int {
         if let animatedImage = image as? AnimatedImage {
-            return animatedImage.data.length + super.costFor(image)
+            return animatedImage.data.count + super.cost(for: image)
         }
-        return super.costFor(image)
+        return super.cost(for: image)
     }
 }
