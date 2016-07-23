@@ -90,17 +90,17 @@ public extension FLAnimatedImageView {
 
 /** Memory cache that is aware of animated images. Can be used for both single-frame and animated images.
  */
-public class AnimatedImageMemoryCache: Nuke.ImageCache {
+public class AnimatedImageCache: Nuke.ImageCache {
 
     /** Can be used to disable storing animated images. Default value is true (storage is allowed).
      */
     public var allowsAnimatedImagesStorage = true
 
-    public override func setImage(_ image: Image, for key: ImageRequestKey) {
+    public override func setImage(_ image: Image, for request: ImageRequest) {
         if !self.allowsAnimatedImagesStorage && image is AnimatedImage {
             return
         }
-        super.setImage(image, for: key)
+        super.setImage(image, for: request)
     }
 
     public override func cost(for image: Image) -> Int {
