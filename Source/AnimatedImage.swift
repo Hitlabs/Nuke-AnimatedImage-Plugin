@@ -56,7 +56,21 @@ public class AnimatedImageDecoder: Nuke.DataDecoding {
         }
         return nil
     }
+}
+
+public struct AnimatedImageProcessor: Nuke.ImageProcessing {
+    private let processor: Nuke.ImageProcessing
     
+    public init(processor: Nuke.ImageProcessing) {
+        self.processor = processor
+    }
+    
+    public func process(_ image: Image) -> Image? {
+        if image is AnimatedImage {
+            return image
+        }
+        return self.processor.process(image)
+    }
 }
 
 /** Extension that adds image loading capabilities to the FLAnimatedImageView.
