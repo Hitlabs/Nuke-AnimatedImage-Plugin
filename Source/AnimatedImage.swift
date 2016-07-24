@@ -29,7 +29,7 @@ public class AnimatedImage: UIImage {
  */
 public class AnimatedImageDecoder: Nuke.DataDecoding {
     public init() {}
-
+    
     public func decode(data: Data, response: URLResponse) -> Image? {
         guard self.isAnimatedGIFData(data) else {
             return nil
@@ -59,9 +59,9 @@ public class AnimatedImageDecoder: Nuke.DataDecoding {
 }
 
 public struct AnimatedImageProcessor: Nuke.ImageProcessing {
-    private let processor: Nuke.ImageProcessing
+    private let processor: Nuke.AnyImageProcessor
     
-    public init(processor: Nuke.ImageProcessing) {
+    public init(processor: Nuke.AnyImageProcessor) {
         self.processor = processor
     }
     
@@ -71,6 +71,11 @@ public struct AnimatedImageProcessor: Nuke.ImageProcessing {
         }
         return self.processor.process(image)
     }
+}
+
+/// Returns true if both decompressors have the same `targetSize` and `contentMode`.
+public func ==(lhs: AnimatedImageProcessor, rhs: AnimatedImageProcessor) -> Bool {
+    return lhs.processor == lhs.processor
 }
 
 /** Extension that adds image loading capabilities to the FLAnimatedImageView.
@@ -86,7 +91,7 @@ public extension FLAnimatedImageView {
         if let image = image as? AnimatedImage {
             // Display poster image immediately
             self.image = image
-
+            
             // Start playback after we prefare FLAnimatedImage for rendering
             DispatchQueue.global(attributes: DispatchQueue.GlobalAttributes.qosDefault).async {
                 let animatedImage = FLAnimatedImage(animatedGIFData: image.data)
@@ -105,18 +110,18 @@ public extension FLAnimatedImageView {
 /** Memory cache that is aware of animated images. Can be used for both single-frame and animated images.
  */
 public class AnimatedImageCache: Nuke.ImageCache {
-
+    
     /** Can be used to disable storing animated images. Default value is true (storage is allowed).
      */
     public var allowsAnimatedImagesStorage = true
-
+    
     public override func setImage(_ image: Image, for request: ImageRequest) {
         if !self.allowsAnimatedImagesStorage && image is AnimatedImage {
             return
         }
         super.setImage(image, for: request)
     }
-
+    
     public override func cost(for image: Image) -> Int {
         if let animatedImage = image as? AnimatedImage {
             return animatedImage.data.count + super.cost(for: image)
