@@ -30,7 +30,7 @@ public class AnimatedImage: UIImage {
 public class AnimatedImageDecoder: Nuke.DataDecoding {
     public init() {}
     
-    public func decode(data: Data, response: URLResponse) -> Image? {
+    public func decode(data: Data, response: URLResponse) -> Nuke.Image? {
         guard self.isAnimatedGIFData(data) else {
             return nil
         }
@@ -58,10 +58,10 @@ public class AnimatedImageDecoder: Nuke.DataDecoding {
     }
 }
 
-public struct AnimatedImageProcessor: Nuke.ImageProcessing {
-    private let processor: Nuke.AnyImageProcessor
+public struct AnimatedImageProcessor: Nuke.Processing {
+    private let processor: Nuke.AnyProcessor
     
-    public init(processor: Nuke.AnyImageProcessor) {
+    public init(processor: Nuke.AnyProcessor) {
         self.processor = processor
     }
     
@@ -109,20 +109,20 @@ public extension FLAnimatedImageView {
 
 /** Memory cache that is aware of animated images. Can be used for both single-frame and animated images.
  */
-public class AnimatedImageCache: Nuke.ImageCache {
+public class AnimatedImageCache: Nuke.Cache {
     
     /** Can be used to disable storing animated images. Default value is true (storage is allowed).
      */
     public var allowsAnimatedImagesStorage = true
     
-    public override func setImage(_ image: Image, for request: ImageRequest) {
+    public override func setImage(_ image: Nuke.Image, for request: Nuke.Request) {
         if !self.allowsAnimatedImagesStorage && image is AnimatedImage {
             return
         }
         super.setImage(image, for: request)
     }
     
-    public override func cost(for image: Image) -> Int {
+    public override func cost(for image: Nuke.Image) -> Int {
         if let animatedImage = image as? AnimatedImage {
             return animatedImage.data.count + super.cost(for: image)
         }
