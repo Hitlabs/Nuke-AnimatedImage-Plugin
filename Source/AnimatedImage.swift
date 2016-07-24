@@ -25,6 +25,27 @@ public class AnimatedImage: UIImage {
     }
 }
 
+/// Composes multiple image decoders.
+public class DataDecoderComposition: DataDecoding {
+    /// Image decoders that the receiver was initialized with.
+    public let decoders: [DataDecoding]
+    
+    /// Composes multiple image decoders.
+    public init(decoders: [DataDecoding]) {
+        self.decoders = decoders
+    }
+    
+    /// Decoders are applied in an order in which they are present in the decoders array. The decoding stops when one of the decoders produces an image.
+    public func decode(data: Data, response: URLResponse) -> Image? {
+        for decoder in decoders {
+            if let image = decoder.decode(data: data, response: response) {
+                return image
+            }
+        }
+        return nil
+    }
+}
+
 /** Creates instances of `AnimatedImage` class from the given data. Checks if the image data is in a GIF image format, otherwise returns nil.
  */
 public class AnimatedImageDecoder: Nuke.DataDecoding {
