@@ -114,7 +114,7 @@ public extension FLAnimatedImageView {
             self.image = image
 
             // Start playback after we prefare FLAnimatedImage for rendering
-            DispatchQueue.global(attributes: DispatchQueue.GlobalAttributes.qosDefault).async {
+            DispatchQueue.global().async {
                 let animatedImage = FLAnimatedImage(animatedGIFData: image.data)
                 DispatchQueue.main.async {
                     if self.image === image { // Still displaying the same poster image
