@@ -72,7 +72,7 @@ public class AnimatedImageDecoder: Nuke.DataDecoding {
     }
 
     private func posterImage(for data: Data) -> CGImage? {
-        if let source = CGImageSourceCreateWithData(data, nil) {
+        if let source = CGImageSourceCreateWithData(data as CFData, nil) {
             return CGImageSourceCreateImageAtIndex(source, 0, nil)
         }
         return nil
@@ -80,7 +80,7 @@ public class AnimatedImageDecoder: Nuke.DataDecoding {
 }
 
 public struct AnimatedImageProcessor: Nuke.Processing {
-    private let processor: Nuke.AnyProcessor
+    fileprivate let processor: Nuke.AnyProcessor
 
     public init(processor: Nuke.AnyProcessor) {
         self.processor = processor
@@ -114,7 +114,7 @@ public extension FLAnimatedImageView {
             self.image = image
 
             // Start playback after we prefare FLAnimatedImage for rendering
-            DispatchQueue.global(attributes: DispatchQueue.GlobalAttributes.qosDefault).async {
+            DispatchQueue.global().async {
                 let animatedImage = FLAnimatedImage(animatedGIFData: image.data)
                 DispatchQueue.main.async {
                     if self.image === image { // Still displaying the same poster image
@@ -130,20 +130,20 @@ public extension FLAnimatedImageView {
 
 /** Memory cache that is aware of animated images. Can be used for both single-frame and animated images.
  */
-public class AnimatedImageCache: Nuke.Cache {
+open class AnimatedImageCache: Nuke.Cache {
 
     /** Can be used to disable storing animated images. Default value is true (storage is allowed).
      */
     public var allowsAnimatedImagesStorage = true
 
-    public override func setImage(_ image: Nuke.Image, for request: Nuke.Request) {
+    open override func setImage(_ image: Nuke.Image, for request: Nuke.Request) {
         if !self.allowsAnimatedImagesStorage && image is AnimatedImage {
             return
         }
         super.setImage(image, for: request)
     }
 
-    public override func cost(for image: Nuke.Image) -> Int {
+    open override func cost(for image: Nuke.Image) -> Int {
         if let animatedImage = image as? AnimatedImage {
             return animatedImage.data.count + super.cost(for: image)
         }

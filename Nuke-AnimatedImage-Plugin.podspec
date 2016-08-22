@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
 
     s.module_name      = "NukeAnimatedImagePlugin"
 
-    s.ios.deployment_target = "8.0"
+    s.ios.deployment_target = "9.0"
 
     s.dependency "Nuke", "~> 3.0"
     s.dependency "FLAnimatedImage", "~> 1.0"

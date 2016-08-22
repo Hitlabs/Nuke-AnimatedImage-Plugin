@@ -36,8 +36,8 @@ imageView.nk_setImageWith(<#imageRequest#>) // Loads animated image and starts p
 See [Nuke](https://github.com/kean/Nuke) for installation instructions.
 
 ## Requirements
-- iOS 8.0+
-- Xcode 7.0+, Swift 2.0+
+- iOS 9.0
+- Xcode 8, Swift 3
 
 ## Contacts
 
