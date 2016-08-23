@@ -132,17 +132,6 @@ public extension FLAnimatedImageView {
  */
 open class AnimatedImageCache: Nuke.Cache {
 
-    /** Can be used to disable storing animated images. Default value is true (storage is allowed).
-     */
-    public var allowsAnimatedImagesStorage = true
-
-    open override func setImage(_ image: Nuke.Image, for request: Nuke.Request) {
-        if !self.allowsAnimatedImagesStorage && image is AnimatedImage {
-            return
-        }
-        super.setImage(image, for: request)
-    }
-
     open override func cost(for image: Nuke.Image) -> Int {
         if let animatedImage = image as? AnimatedImage {
             return animatedImage.data.count + super.cost(for: image)
