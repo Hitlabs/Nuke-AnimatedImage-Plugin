@@ -128,14 +128,17 @@ public extension FLAnimatedImageView {
     }
 }
 
-/** Memory cache that is aware of animated images. Can be used for both single-frame and animated images.
- */
-open class AnimatedImageCache: Nuke.Cache {
-
-    open override func cost(for image: Nuke.Image) -> Int {
-        if let animatedImage = image as? AnimatedImage {
-            return animatedImage.data.count + super.cost(for: image)
+public extension Nuke.Cache {
+    /// Updates Cache cost block by adding special handling of `AnimatedImages`.
+    public func preparedForAnimatedImages() -> Self {
+        let cost = self.cost
+        self.cost = {
+            var val = cost($0)
+            if let animatedImage = $0 as? AnimatedImage {
+                val += animatedImage.data.count
+            }
+            return val
         }
-        return super.cost(for: image)
+        return self
     }
 }
